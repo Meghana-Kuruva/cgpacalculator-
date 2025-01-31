@@ -64,10 +64,9 @@
     </style>
 
     <script>
-        function addRow() {
-            const table = document.getElementById("dynamicTable").querySelector("tbody");
+        function addRow(semId) {
+            const table = document.getElementById(`table${semId}`).querySelector("tbody");
             const newRow = table.insertRow();
-
             newRow.innerHTML = `
                 <td><input type="text" placeholder="Enter Subject"></td>
                 <td><input type="number" placeholder="Enter Credit"></td>
@@ -85,8 +84,8 @@
             `;
         }
 
-        function deleteRow() {
-            const table = document.getElementById("dynamicTable").querySelector("tbody");
+        function deleteRow(semId) {
+            const table = document.getElementById(`table${semId}`).querySelector("tbody");
             if (table.rows.length > 0) {
                 table.deleteRow(-1);
             } else {
@@ -94,8 +93,8 @@
             }
         }
 
-        function calculateCGPA() {
-            const table = document.getElementById("dynamicTable").querySelector("tbody");
+        function calculateSGPA(semId) {
+            const table = document.getElementById(`table${semId}`).querySelector("tbody");
             let totalCredits = 0, totalPoints = 0;
 
             for (let row of table.rows) {
@@ -112,8 +111,54 @@
                 return;
             }
 
-            let cgpa = (totalPoints / totalCredits).toFixed(2);
-            document.getElementById("cgpaResult").innerText = `CGPA: ${cgpa}`;
+            let sgpa = (totalPoints / totalCredits).toFixed(2);
+            document.getElementById(`sgpaResult${semId}`).innerText = `SGPA: ${sgpa}`;
+            return { sgpa: parseFloat(sgpa), credits: totalCredits };
+        }
+
+        function addSemester() {
+            let semContainer = document.getElementById("semesters");
+            let semId = document.querySelectorAll(".semester").length + 1;
+
+            let semDiv = document.createElement("div");
+            semDiv.classList.add("semester");
+            semDiv.innerHTML = `
+                <h2>Semester ${semId}</h2>
+                <button onclick="addRow(${semId})" class="btn-add">Add Row</button>
+                <button onclick="deleteRow(${semId})" class="btn-delete">Delete Last Row</button>
+                <table id="table${semId}">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Credit</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <br>
+                <button onclick="calculateSGPA(${semId})" class="btn-cgpa">Calculate SGPA</button>
+                <h3 id="sgpaResult${semId}">SGPA: </h3>
+            `;
+
+            semContainer.appendChild(semDiv);
+        }
+
+        function calculateCGPA() {
+            let semesters = document.querySelectorAll(".semester");
+            let totalSGPA = 0, totalCredits = 0;
+
+            for (let sem of semesters) {
+                let semId = sem.querySelector("h2").innerText.split(" ")[1];
+                let sgpaData = calculateSGPA(semId);
+                if (sgpaData) {
+                    totalSGPA += sgpaData.sgpa * sgpaData.credits;
+                    totalCredits += sgpaData.credits;
+                }
+            }
+
+            let cgpa = totalCredits === 0 ? 0 : (totalSGPA / totalCredits).toFixed(2);
+            document.getElementById("cgpaResult").innerText = `Overall CGPA: ${cgpa}`;
         }
     </script>
 </head>
@@ -132,7 +177,6 @@
         <label for="rollno">Roll Number:</label>
         <input type="text" id="rollno" placeholder="Enter Roll Number">
         <br><br>
-
         <label for="batch">Batch:</label>
         <input type="text" id="batch" placeholder="Enter Batch ">
         <br><br>
@@ -146,57 +190,19 @@
         <br><br>
 
         <label for="phno">Mobile Number:</label>
-        <input type="number" id="phno" placeholder="Enter 10-digit number">
+        <input type="text" id="phno" placeholder="Enter 10-digit number" maxlength="10" >
         <br><br>
 
         <button type="submit" class="btn-submit">Submit</button>
     </form>
 
-    <h2>Grade Table</h2>
-    <table>
-        <tr>
-            <th>Grade</th>
-            <td>O</td>
-            <td>A</td>
-            <td>B</td>
-            <td>C</td>
-            <td>D</td>
-            <td>P</td>
-            <td>F</td>
-        </tr>
-        <tr>
-            <th>Points</th>
-            <td>10</td>
-            <td>9</td>
-            <td>8</td>
-            <td>7</td>
-            <td>6</td>
-            <td>5</td>
-            <td>0</td>
-        </tr>
-    </table>
+    <h2>Calculate SGPA & CGPA</h2>
+    <button onclick="addSemester()" class="btn-add">Add Semester</button>
 
-    <h2>Calculate  CGPA</h2>
-    <div>
-        <button onclick="addRow()" type="button" class="btn-add">Add Row</button>
-        <button onclick="deleteRow()" type="button" class="btn-delete">Delete Last Row</button>
-    </div>
-
-    <table id="dynamicTable">
-        <thead>
-            <tr>
-                <th>Subject</th>
-                <th>Credit</th>
-                <th>Grade</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Rows will be added dynamically -->
-        </tbody>
-    </table>
+    <div id="semesters"></div>
 
     <br>
     <button onclick="calculateCGPA()" class="btn-cgpa">Calculate CGPA</button>
-    <h3 id="cgpaResult">CGPA: </h3>
+    <h3 id="cgpaResult">Overall CGPA: </h3>
 </body>
 </html>
